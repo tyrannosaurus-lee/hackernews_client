@@ -118,35 +118,46 @@ parcelRequire = (function (modules, cache, entry, globalName) {
 
   return newRequire;
 })({"app.js":[function(require,module,exports) {
-var ajax = new XMLHttpRequest(); // ajax.open('GET', 'http://api.hnpwa.com/v0/news/1.json', false);
-
+var ajax = new XMLHttpRequest();
+var content = document.createElement('div');
 var NEWS_URL = 'http://api.hnpwa.com/v0/news/1.json';
-ajax.open('GET', NEWS_URL, false); //동기적으로 처리하겠다.
+var CONTENT_URL = 'http://api.hnpwa.com/v0/item/@id.json'; //  item/id값.json에서 id값은 실제로 클릭했을 때 그 값을 넣어 주기 위해 마킹만 해놓음.
 
-ajax.send(); //ajax가 제공하는 send라고 하는 함수 호출
-// console.log(ajax.response);
+ajax.open('GET', NEWS_URL, false);
+ajax.send(); // console.log(ajax.response);
 
-var newsFeed = JSON.parse(ajax.response); // console.log(newsFeed);
-// JSON.parse : json 데이터를 객체로 바꾸는 도구
-// Response를 console.log로 찍은 것과 JSON.parse로 바꾼 객체를 찍은 것이 다르게 보임
-// Preview 탭에서 봤던 것과 굉장히 유사하게 보임. 객체로 바뀌어서 그러함
-// 자바스크립트에서 좀 더 손쉽게 데이터를 다룰 수 있게 됨.
+var newsFeed = JSON.parse(ajax.response);
+var ul = document.createElement('ul'); // 해시가 바뀌었을 때 이벤트 발생.
+// hashchange가 일어났다는 얘기는 현재 여기서 우리가 해시를 가지고 북마크로 사용하진 않고
+// 그 기능을 사용하지 않고 있으니, 그걸 이용해서 어떤 링크, 어떤 타이틀이 클릭됐구나 생각
 
-var ul = document.createElement('ul');
+window.addEventListener('hashchange', function () {
+  // CONTENT url을 이용해서 데이터를 불러옴
+  var id = location.hash.substr(1); //location : 주소와 관련된 다양한 정보들을 제공해 줌.
+
+  console.log('해시가 변경됨');
+  ajax.open('GET', CONTENT_URL.replace('@id', id), false);
+  ajax.send(); //  데이터가 들어오면 ajx.response에 JSON데이터로 들어갈 테니까 JSON.parse하면 됨
+
+  var newsContent = JSON.parse(ajax.response);
+  var title = document.createElement('h1');
+  title.innerHTML = newsContent.title;
+  content.appendChild(title);
+  console.log(newsContent);
+});
 
 for (var i = 0; i < 10; i++) {
-  // document.getElementById('root').innerHTML =
-  // `<ul>
-  //     <li>${newsFeed[0].title}</li>
-  //     <li>${newsFeed[1].title}</li>
-  //     <li>${newsFeed[2].title}</li>
-  // </ul>`
   var li = document.createElement('li');
-  li.innerHTML = newsFeed[i].title;
+  var a = document.createElement('a');
+  a.href = "#".concat(newsFeed[i].id);
+  a.innerHTML = "".concat(newsFeed[i].title, " (").concat(newsFeed[i].comments_count, ")"); // a.addEventListener('click', function(){});
+
+  li.appendChild(a);
   ul.appendChild(li);
 }
 
 document.getElementById('root').appendChild(ul);
+document.getElementById('root').appendChild(content);
 },{}],"../../../AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
@@ -175,7 +186,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50661" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57006" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
