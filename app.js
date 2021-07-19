@@ -17,7 +17,9 @@ const ul = document.createElement('ul');
 // 그 기능을 사용하지 않고 있으니, 그걸 이용해서 어떤 링크, 어떤 타이틀이 클릭됐구나 생각
 window.addEventListener('hashchange', function(){
     // CONTENT url을 이용해서 데이터를 불러옴
-    const id = location.hash.substr(1); //location : 주소와 관련된 다양한 정보들을 제공해 줌.
+    const id = location.hash.substr(1);
+    //location : 주소와 관련된 다양한 정보들을 제공해 줌.
+    // substr(1)로 링크 맨 앞의 # 삭제
     console.log('해시가 변경됨');
     ajax.open('GET', CONTENT_URL.replace('@id', id), false);
     ajax.send();
@@ -35,7 +37,7 @@ for(let i=0; i<10; i++){
     const li = document.createElement('li');
     const a = document.createElement('a');
 
-    a.href = `#${newsFeed[i].id}`;
+    a.href = `#${newsFeed[i].id}`;  //const id에서 substr(1)로 링크 맨 앞의 #삭제
     a.innerHTML = `${newsFeed[i].title} (${newsFeed[i].comments_count})`;
     // a.addEventListener('click', function(){});
     li.appendChild(a);
