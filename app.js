@@ -34,17 +34,26 @@ window.addEventListener('hashchange', function(){
 });
 
 for(let i=0; i<10; i++){
+    const div = document.createElement('div');// 임시로 쓰고 버릴 DOM(최종적으로 그 DOM을 쓰진 않을 것임)
     const li = document.createElement('li');
     const a = document.createElement('a');
 
-    a.href = `#${newsFeed[i].id}`;  //const id에서 substr(1)로 링크 맨 앞의 #삭제
-    a.innerHTML = `${newsFeed[i].title} (${newsFeed[i].comments_count})`;
-    // a.addEventListener('click', function(){});
-    li.appendChild(a);
-    ul.appendChild(li);
+    div.innerHTML =`
+    <li>
+        <a href="#${newsFeed[i].id}">
+        ${newsFeed[i].title} (${newsFeed[i].comments_count})
+        </a>
+    </li>
+    `;
+
+    //  div태그 안에 추가된 li태그만 사용할 예정. div 태그가 갖고 있는 자식 요소가 li 태그
+    //ul.appendChild(div.children[0]);
+    ul.appendChild(div.firstElementChild);
 }
 
 container.appendChild(ul);
 container.appendChild(content);
 
-
+// DOM API를 이용해서 UI의 구조가 잘 드러나지 않는 문제점을
+// 해결하는 가장 손쉬운 방법은 아이러니하게도 DOM API자체를 최대한 사용하지 않는 것.
+// 그거슨 바로 문자열만을 가지고 UI를 만드는 방식
