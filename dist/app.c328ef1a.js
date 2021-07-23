@@ -122,45 +122,49 @@ var container = document.getElementById('root');
 var ajax = new XMLHttpRequest();
 var content = document.createElement('div');
 var NEWS_URL = 'http://api.hnpwa.com/v0/news/1.json';
-var CONTENT_URL = 'http://api.hnpwa.com/v0/item/@id.json'; // 반복되는 ajax.open(), ajax.send(), JSON.parse(ajax.response) 코드를 함수로 묶는다.
+var CONTENT_URL = 'http://api.hnpwa.com/v0/item/@id.json';
 
 function getData(url) {
   ajax.open('GET', url, false);
   ajax.send();
   return JSON.parse(ajax.response);
-} // 반복되는 ajax.open(), ajax.send()를 getData함수에 넣는다.
-// ajax.open('GET', NEWS_URL, false);
-// ajax.send();
-// 반복되는 JSON.parse(ajax.response)를 getData함수에 넣는다.
-// const newsFeed = JSON.parse(ajax.response);
-
-
-var newsFeed = getData(NEWS_URL);
-var ul = document.createElement('ul');
-window.addEventListener('hashchange', function () {
-  var id = location.hash.substr(1); // 반복되는 ajax.open(), ajax.send()를 getData함수에 넣는다.
-  // ajax.open('GET', CONTENT_URL.replace('@id', id), false);
-  // ajax.send();
-  // 반복되는 JSON.parse(ajax.response)를 getData함수에 넣는다.
-  // const newsContent = JSON.parse(ajax.response);
-
-  var newsContent = getData(CONTENT_URL.replace('@id', id));
-  var title = document.createElement('h1');
-  title.innerHTML = newsContent.title;
-  content.appendChild(title);
-  console.log(newsContent);
-});
-
-for (var i = 0; i < 10; i++) {
-  var div = document.createElement('div');
-  var li = document.createElement('li');
-  var a = document.createElement('a');
-  div.innerHTML = "\n    <li>\n        <a href=\"#".concat(newsFeed[i].id, "\">\n        ").concat(newsFeed[i].title, " (").concat(newsFeed[i].comments_count, ")\n        </a>\n    </li>\n    ");
-  ul.appendChild(div.firstElementChild);
 }
 
-container.appendChild(ul);
-container.appendChild(content);
+var newsFeed = getData(NEWS_URL);
+var ul = document.createElement('ul'); // 내용 화면으로 진입
+
+window.addEventListener('hashchange', function () {
+  var id = location.hash.substr(1);
+  var newsContent = getData(CONTENT_URL.replace('@id', id));
+  var title = document.createElement('h1'); //  문자열 처리 방식으로 화면에 UI 구성. div하위를 싹 다 날려벌임
+  // 이전 화면이 사라지고 현재 사용자가 보는 글 내용 화면이 나오게 됨.
+  // 목록 화면도  append 하는 구조고 되어 있으면 안됨.
+  // container.innerHTML을 다 밀어 넣는 방식으로 바꿈
+
+  container.innerHTML = "\n        <h1>".concat(newsContent.title, "</h1>\n        <div>\n            <a href=\"#\">\uBAA9\uB85D\uC73C\uB85C</a>\n        </div>\n    "); // title.innerHTML = newsContent.title;
+  // content.appendChild(title);
+}); // 내가 만들고자 하는 문자열 전체 세트를 만들기 위해서는 중간 단계가 많이 필요함
+// 이럴땐 배열 사용!!!
+
+var newsList = [];
+newsList.push('<ul>');
+
+for (var i = 0; i < 10; i++) {
+  // const div = document.createElement('div');
+  // div.innerHTML =`
+  newsList.push("\n    <li>\n        <a href=\"#".concat(newsFeed[i].id, "\">\n        ").concat(newsFeed[i].title, " (").concat(newsFeed[i].comments_count, ")\n        </a>\n    </li>\n    ")); // ul.appendChild(div.firstElementChild);
+}
+
+newsList.push('</ul>'); // innerHTML에 newsList를 넣을 수 없음. 왜냐하면 innerHTML에는 하나의 문자열이 들어가야 됨.
+// 하지만 newsList는 배열.
+// 배열을 하나의 문자열로 합치는 기능을 배열이 제공해 줌 = join()
+
+container.innerHTML = newsList.join(''); // 추가하는 코드만 있음. 추가 즉, 기존 걸 유지한다는 것.
+// 당연히 목록 화면에서 내용 화면으로 진입했을 때 목록 화면이 유지되고 있는 것.
+// 사용자 입장에서는 2개의 화면을 동시에 다 보고 있는 상태가 만들어짐
+// 내용화면으로 진입하면 기존의 목록 화면을 다 없앤다. = appendChild를 쓰지 않음
+// container.appendChild(ul);
+// container.appendChild(content);
 },{}],"../../../AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
@@ -189,7 +193,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "60783" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "60376" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
