@@ -128,43 +128,49 @@ function getData(url) {
   ajax.open('GET', url, false);
   ajax.send();
   return JSON.parse(ajax.response);
+} // 글 목록
+
+
+function newsFeed() {
+  var newsFeed = getData(NEWS_URL);
+  var newsList = [];
+  newsList.push('<ul>');
+
+  for (var i = 0; i < 10; i++) {
+    newsList.push("\n        <li>\n            <a href=\"#".concat(newsFeed[i].id, "\">\n            ").concat(newsFeed[i].title, " (").concat(newsFeed[i].comments_count, ")\n            </a>\n        </li>\n        "));
+  }
+
+  newsList.push('</ul>');
+  container.innerHTML = newsList.join('');
 }
 
-var newsFeed = getData(NEWS_URL);
-var ul = document.createElement('ul'); // 내용 화면으로 진입
+var ul = document.createElement('ul'); // 글 내용
 
-window.addEventListener('hashchange', function () {
+function newsDetail() {
   var id = location.hash.substr(1);
   var newsContent = getData(CONTENT_URL.replace('@id', id));
-  var title = document.createElement('h1'); //  문자열 처리 방식으로 화면에 UI 구성. div하위를 싹 다 날려벌임
-  // 이전 화면이 사라지고 현재 사용자가 보는 글 내용 화면이 나오게 됨.
-  // 목록 화면도  append 하는 구조고 되어 있으면 안됨.
-  // container.innerHTML을 다 밀어 넣는 방식으로 바꿈
+  var title = document.createElement('h1');
+  container.innerHTML = "\n        <h1>".concat(newsContent.title, "</h1>\n        <div>\n            <a href=\"#\">\uBAA9\uB85D\uC73C\uB85C</a>\n        </div>\n    ");
+} // 라우터
+// 화면이 전환되어야 할 때(hashchange) 라우터가 판단해서 해당하는 화면으로 전환시킴
 
-  container.innerHTML = "\n        <h1>".concat(newsContent.title, "</h1>\n        <div>\n            <a href=\"#\">\uBAA9\uB85D\uC73C\uB85C</a>\n        </div>\n    "); // title.innerHTML = newsContent.title;
-  // content.appendChild(title);
-}); // 내가 만들고자 하는 문자열 전체 세트를 만들기 위해서는 중간 단계가 많이 필요함
-// 이럴땐 배열 사용!!!
 
-var newsList = [];
-newsList.push('<ul>');
+function router() {
+  var routePath = location.hash; // 화면을 전환하는 용도의 값
+  // 라우터 값을 가지고 내가 현재 목록과 내용중 어떤것을 표시할지 판단해야함
 
-for (var i = 0; i < 10; i++) {
-  // const div = document.createElement('div');
-  // div.innerHTML =`
-  newsList.push("\n    <li>\n        <a href=\"#".concat(newsFeed[i].id, "\">\n        ").concat(newsFeed[i].title, " (").concat(newsFeed[i].comments_count, ")\n        </a>\n    </li>\n    ")); // ul.appendChild(div.firstElementChild);
-}
+  if (routePath === '') {
+    // routePath에 빈 문자열이면 location.hash에 #이 들어있음
+    // locatiohn.hash에 #만 있을 경우 빈 값을 반환하여 참
+    newsFeed();
+  } else {
+    newsDetail();
+  }
+} // 해시가 바뀔 때마다 라우터가 동작함
 
-newsList.push('</ul>'); // innerHTML에 newsList를 넣을 수 없음. 왜냐하면 innerHTML에는 하나의 문자열이 들어가야 됨.
-// 하지만 newsList는 배열.
-// 배열을 하나의 문자열로 합치는 기능을 배열이 제공해 줌 = join()
 
-container.innerHTML = newsList.join(''); // 추가하는 코드만 있음. 추가 즉, 기존 걸 유지한다는 것.
-// 당연히 목록 화면에서 내용 화면으로 진입했을 때 목록 화면이 유지되고 있는 것.
-// 사용자 입장에서는 2개의 화면을 동시에 다 보고 있는 상태가 만들어짐
-// 내용화면으로 진입하면 기존의 목록 화면을 다 없앤다. = appendChild를 쓰지 않음
-// container.appendChild(ul);
-// container.appendChild(content);
+window.addEventListener('hashchange', router);
+router();
 },{}],"../../../AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
