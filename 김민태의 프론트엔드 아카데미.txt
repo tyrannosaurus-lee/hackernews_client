@@ -1,8 +1,13 @@
 김민태의 프론트엔드 아카데미 starter Kit 연습
 https://fastcampus.co.kr/category_academy_kmt
 
+* 학습 환경
+
+vs code에서 debugger for chrome 설치
+
+typescriopt 설치 : https://www.npmjs.com/package/typescript
+npm install -g typescript
+
 parcel.js 설치 : npm install -g parcel-bundler
-
 package.json생성 : npm init -y
-
 parcel.js 시작 : parcel index.html

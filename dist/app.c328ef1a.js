@@ -125,15 +125,7 @@ var NEWS_URL = 'http://api.hnpwa.com/v0/news/1.json';
 var CONTENT_URL = 'http://api.hnpwa.com/v0/item/@id.json'; // 여러 함수에 걸쳐서 접근하게 되는 정보는 함수 바깥쪽으로 빼놓는 것이 필요함
 
 var store = {
-  currentPage: 1 // 자바스크립트를 이용한 페이징 처리 방법
-  // 페이징 파라미터
-  // appendEle : Element
-  // totalCount : 데이터 총 카운트
-  // recordsPerPage : 페이지 데이터 레코드 개수
-  // navPage : 페이지 개수
-  // currentPage : 현재 페이지
-  // sellBoolean : 맨앞, 맨뒤 표현 여부
-
+  currentPage: 1
 };
 
 function getData(url) {
@@ -146,23 +138,26 @@ function getData(url) {
 function newsFeed() {
   var newsFeed = getData(NEWS_URL);
   var newsList = [];
-  newsList.push('<ul>'); // currentPage가 1일 때는 i값이 0이므로 -1을 해준다.
-  // 하나의 페이지의 크기가 결국 10개
-  // 10이라는 것은 결국 한 페이지의 단위가 됨
-  // 그러니까 페이지가 바뀐다는 건 이 페이지 단위 개수만큼 널뛰기가 되어야 한다는 것
-  // for(let i=0; i<10; i++){
+  var template = "\n        <div>\n            <h1>Hacker News</h1>\n            <ul>\n                {{__news_feed__}}\n            </ul>\n            <div>\n                <a href=\"#/page/{{__prev_page__}}\">\uC774\uC804 \uD398\uC774\uC9C0</a>\n                <a href=\"#/page/{{__next_page__}}\">\uB2E4\uC74C \uD398\uC774\uC9C0</a>\n            </div>\n        </div>\n    "; // newsList.push('<ul>');
 
   for (var i = (store.currentPage - 1) * 10; i < store.currentPage * 10; i++) {
     newsList.push("\n        <li>\n            <a href=\"#/show/".concat(newsFeed[i].id, "\">\n            ").concat(newsFeed[i].title, " (").concat(newsFeed[i].comments_count, ")\n            </a>\n        </li>\n        "));
   }
 
-  newsList.push('</ul>');
-  newsList.push("\n        <div>\n            <a href=\"#/page/".concat(store.currentPage > 1 ? store.currentPage - 1 : 1, "\">\uC774\uC804 \uD398\uC774\uC9C0</a>\n            <a href=\"#/page/").concat(store.currentPage + 1, "\">\uB2E4\uC74C \uD398\uC774\uC9C0</a>\n        </div>\n    ")); // 코드가 한줄일땐 if문 쓰기 부담스러우니 삼항연산자를 사용한다
+  template = template.replace('{{__news_feed__}}', newsList.join(''));
+  template = template.replace('{{__prev_page__}}', store.currentPage > 1 ? store.currentPage - 1 : 1);
+  template = template.replace('{{__next_page__}}', store.currentPage + 1); // newsList.push('</ul>');
+  // newsList.push(`
+  //     <div>
+  //         <a href="#/page/${store.currentPage > 1 ? store.currentPage - 1 : 1}">이전 페이지</a>
+  //         <a href="#/page/${store.currentPage + 1}">다음 페이지</a>
+  //     </div>
+  // `)
 
   container.innerHTML = newsList.join('');
-}
+} // const ul = document.createElement('ul');
+// 글 내용
 
-var ul = document.createElement('ul'); // 글 내용
 
 function newsDetail() {
   var id = location.hash.substr(7);
@@ -178,10 +173,6 @@ function router() {
   if (routePath === '') {
     newsFeed();
   } else if (routePath.indexOf('#/page/') >= 0) {
-    // 0보다 작은 값이면 입력으로 주어진 문자열이 없다
-    // substr이라고 하는 함수로 반환되는 값은 실제로 숫자가 아니라 문자열이다
-    // currentPage는 숫자로 되어 있어야 함
-    // store.currentPage = 2;
     store.currentPage = Number(routePath.substr(7));
     newsFeed();
   } else {
@@ -219,7 +210,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49488" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53133" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
