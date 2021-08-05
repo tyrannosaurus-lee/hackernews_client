@@ -6,6 +6,7 @@ const CONTENT_URL = 'http://api.hnpwa.com/v0/item/@id.json'
 
 const store = {
     currentPage: 1,
+    feeds: [],
 }
 
 function getData(url) {
@@ -15,35 +16,51 @@ function getData(url) {
     return JSON.parse(ajax.response);
 }
 
+// 읽었는지 여부 체크
+function makeFeeds(feeds){
+    for(let i=0; i < feeds.length; i++){
+        feeds[i].red = false;
+    }
+    return feeds;
+}
+
 // 글 목록
 function newsFeed(){
-    const newsFeed = getData(NEWS_URL);
+    // getData를 통해서 무조건 호출되면 새로운 목록을 갖고 옴.
+    // const newsFeed = getData(NEWS_URL);
+    let newsFeed = store.feeds;
+
     const newsList = [];
     let template = `
         <div class="bg-gray-600 min-h-screen">
             <div class="bg-white text-xl">
-            <div class="mx-auto px-4">
-            <div class="flex justify-between items-center py-6">
-            <div class="flex justify-start">
-            <h1 class="font-extrabold">Hacker News</h1>
-            </div>
-            <div class="items-center justify-end">
-            <a href="#/page/{{__prev_page__}}" class="text-gray-500">
-            Previous
-            </a>
-            <a href="#/page/{{__next_page__}}" class="text-gray-500 ml-4">
-            Next
-            </a>
-            </div>
-            </div>
-            </div>
+                <div class="mx-auto px-4">
+                    <div class="flex justify-between items-center py-6">
+                        <div class="flex justify-start">
+                            <h1 class="font-extrabold">Hacker News</h1>
+                        </div>
+                        <div class="items-center justify-end">
+                            <a href="#/page/{{__prev_page__}}" class="text-gray-500">
+                                Previous
+                            </a>
+                            <a href="#/page/{{__next_page__}}" class="text-gray-500 ml-4">
+                                Next
+                            </a>
+                        /div>
+                    </div>
+                </div>
             </div>
             <div class="p-4 text-2xl text-gray-700">
-            {{__news_feed__}}
+                {{__news_feed__}}
             </div>
         </div>
     `;
 
+    // 최초의 한 번은 getData해서 가져와야 함
+    if (newsFeed.length === 0) {
+        // = 을 연속해서 쓸 수 있음
+        newsFeed = store.feeds = makeFeeds(getData(NEWS_URL));
+    }
 
     for(let i=(store.currentPage - 1) * 10; i<store.currentPage * 10; i++){
         newsList.push(`
@@ -55,8 +72,8 @@ function newsFeed(){
                 <div class="text-center text-sm">
                     <div class="w-10 text-white bg-green-300 rounded-lg px-0 py-2">${newsFeed[i].comments_count}</div>
                 </div>
-                </div>
-                <div class="flex mt-3">
+            </div>
+            <div class="flex mt-3">
                 <div class="grid grid-cols-3 text-sm text-gray-500">
                     <div><i class="fas fa-user mr-1"></i>${newsFeed[i].user}</div>
                     <div><i class="fas fa-heart mr-1"></i>${newsFeed[i].points}</div>
@@ -67,13 +84,10 @@ function newsFeed(){
         `);
     }
 
-    // 마킹된 값을 개수만큼 replace가 등장함
-    // 그 얘기는 템플릿 안에 마킹된 데이터가 많으면 많을수록 replace를 이렇게 반복적으로 계속 써야 함.
     template = template.replace('{{__news_feed__}}', newsList.join(''));
     template = template.replace('{{__prev_page__}}', store.currentPage > 1 ? store.currentPage - 1 : 1);
     template = template.replace('{{__next_page__}}', store.currentPage + 1);
 
-    // container.innerHTML = newsList.join('');
     container.innerHTML = template;
 }
 
@@ -112,6 +126,13 @@ function newsDetail(){
         </div>
     `;
 
+    for (let i = 0; i < store.feeds.length; i++){
+        if (store.feeds[i].id === Number(id)) {
+            store.feeds[i].read = true;
+            break;
+        }
+    }
+
     function makeComment(comments, called = 0){
         const commentString = [];
 
@@ -133,17 +154,9 @@ function newsDetail(){
             }
             // 없을때까지 반복
         }
-        // 상위로 거슬러 올라가서 최종적으로 맨 처음에 불렀던 makeComment까지 올라가서 이 전체를 빠져나감
         return commentString.join('');
     }
     container.innerHTML = template.replace('{{__comments__}}', makeComment(newsContent.comments));
-    // container.innerHTML = `
-    //     <h1>${newsContent.title}</h1>
-    //     <div>
-    //         <a href="#/page/${store.currentPage}">목록으로</a>
-    //     </div>
-    // `;
-    // container.innerHTML = template;
 }
 
 // 라우터
