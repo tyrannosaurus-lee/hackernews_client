@@ -149,6 +149,21 @@ function makeFeeds(feeds) {
   }
 
   return feeds;
+} // view update : ex)container.innerHTML에다가 HTML문자열을 넣는 것.
+// 타입가드 : 타입을 방어한다.
+// 어떤 유형의 값이 2가지가 들어온 케이스(그중에 1가지는 null인 즉, 데이터가 없는 케이스)에서 무작정 데이터가 당연히 있다고 생각하과 속성을 접근했을 경우,
+// 이런 류의 코드들에서 null을 체크해라
+
+
+function updateView(html) {
+  // 코드 상으로 null이 들어가 있지 않은 경우에만 innerHTML에 접근해라
+  // if (container != null) 의 축약형
+  // if (container != null) {
+  if (container) {
+    container.innerHTML = template;
+  } else {
+    console.error('최상위 컨테이너가 없어 UI를 진행하지 못합니다.');
+  }
 } // 글 목록
 
 
@@ -170,13 +185,8 @@ function newsFeed() {
 
   template = template.replace('{{__news_feed__}}', newsList.join(''));
   template = template.replace('{{__prev_page__}}', store.currentPage > 1 ? store.currentPage - 1 : 1);
-  template = template.replace('{{__next_page__}}', store.currentPage + 1); // 코드 상으로 null이 들어가 있지 않은 경우에만 innerHTML에 접근해라
-
-  if (container != null) {
-    container.innerHTML = template;
-  } else {
-    console.error('최상위 컨테이너가 없어 UI를 진행하지 못합니다.');
-  }
+  template = template.replace('{{__next_page__}}', store.currentPage + 1);
+  updateView(template);
 } // 글 내용
 
 
@@ -211,14 +221,9 @@ function newsDetail() {
     }
 
     return commentString.join('');
-  } // if (container != null) 의 축약형
-
-
-  if (container) {
-    container.innerHTML = template.replace('{{__comments__}}', makeComment(newsContent.comments));
-  } else {
-    console.error('최상의 컨테이너가 없어 UI를 진행하지 못합니다.');
   }
+
+  updateView(template.replace('{{__comments__}}', makeComment(newsContent.comments)));
 } // 라우터
 
 
