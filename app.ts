@@ -1,10 +1,46 @@
-const container = document.getElementById('root');
-const ajax = new XMLHttpRequest();
+// 타입 알리아스 vs 인터페이스
+// 타입 알리아스 :
+// 객체 형태의 데이터의 유형 형식을 정의한다.
+// 타입이나 인터페이스와 같은 타이핑하는 식별자들은 대문자로 시작하는 표기법을 많이 씀.
+type Store = {
+    currentPage : number; // 객체와 달리 세미콜론;으로 끝내는게 특징
+    // newsFeed가 들어갈 객체 데이터 타입. 이렇게 빈 배열로 타입을 해 놓으면 배열 안에 어떤 게 들어갈지 제약을 하지 못함.
+    // 어떤 유형의 데이터가 다 들어갈 수도 있지만 명확하게 어떤 타입의 데이터가 이 배열 안에 들어갈지 기술해주는게 좋음(타입 명시하기)
+    // feeds: [];
+    // NewsFeed[] : NewsFeed 유형의 데이터가 들어가는 배열이라는 뜻!
+    feeds: NewsFeed[];
+}
+
+type NewsFeed = {
+    id: number;
+    comments_count:number;
+    title: string;
+    url: string;
+    user: string;
+    time_ago: string;
+    poinsts: number;
+    // read :
+    // 다른 속성과 달리 처음에 네트워크를 통해서 가져왔을 땐 없음.
+    // 처음에는 데이터가 없다가 나중에는 있다가. 선택적인 데이터임. 그래서 선택 속성이라고 하는 마킹을 해줄 수 있다.
+    // 콜론;과 속성 명 사이에 물음표를 붙여주면 됨.
+    read?: boolean;
+}
+
+// 프리미티브 타입 vs 객체 타입
+// 프리미티브 타입 :
+// 문자열, 숫자, boolean, nul, undefined
+
+// 타입 확인 : 마우스 커서를 올려놓으면 관련된 정보를 표시해 줌.
+// ex) : string):
+// 함수의 인자 괄호 뒤에 콜론은 이 함수의 반환값 타입. |은 또는(유니온 타입). 둘 중 하나가 반환될 수 있다는 뜻.
+const container: HTMLElement | null = document.getElementById('root');
+const ajax: XMLHttpRequest = new XMLHttpRequest();
 const content = document.createElement('div');
 const NEWS_URL = 'http://api.hnpwa.com/v0/news/1.json';
 const CONTENT_URL = 'http://api.hnpwa.com/v0/item/@id.json'
 
-const store = {
+// store 타입은 store에 씀
+const store: Store = {
     currentPage: 1,
     feeds: [],
 }
@@ -88,7 +124,12 @@ function newsFeed(){
     template = template.replace('{{__prev_page__}}', store.currentPage > 1 ? store.currentPage - 1 : 1);
     template = template.replace('{{__next_page__}}', store.currentPage + 1);
 
-    container.innerHTML = template;
+    // 코드 상으로 null이 들어가 있지 않은 경우에만 innerHTML에 접근해라
+    if (container != null) {
+        container.innerHTML = template;
+    } else {
+        console.error('최상위 컨테이너가 없어 UI를 진행하지 못합니다.');
+    }
 }
 
 
@@ -156,7 +197,14 @@ function newsDetail(){
         }
         return commentString.join('');
     }
-    container.innerHTML = template.replace('{{__comments__}}', makeComment(newsContent.comments));
+
+    // if (container != null) 의 축약형
+    if (container){
+        container.innerHTML = template.replace('{{__comments__}}', makeComment(newsContent.comments));
+    } else {
+        console.error('최상의 컨테이너가 없어 UI를 진행하지 못합니다.');
+    }
+
 }
 
 // 라우터

@@ -6,6 +6,8 @@
         "target": "ES5",
         "module": "CommonJS",
         "alwaysStrict": true,
+
+        // noImplicitAny
         // 변환되지 않은 자바스크립트 파일 내의 타입들은 명시적으로 작성된 게 아니라
         // 암묵적으로 타이핑이 되어 있는 상태이기 때문에
         // 그래서 기본적으로 어떤 타입이든 다 된다는 의미로 Any라고 하는 타입을 가지고 있음
@@ -13,6 +15,9 @@
         // 어떤 기술인지 명확하게 기술할 수 있도록 그 옵션을 켜는 옵션
         "noImplicitAny": true,
         "noImplicitThis": true,
+
+        // sourceMap
+        // 개발 환경과 실행 환경을 일치시킬 수 있는 설정
         "sourceMap": true,
         "downlevelIteraction": true
     }
