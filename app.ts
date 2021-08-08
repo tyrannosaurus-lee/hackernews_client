@@ -70,7 +70,7 @@ function updateView(html) {
     // if (container != null) 의 축약형
     // if (container != null) {
     if (container) {
-        container.innerHTML = template;
+        container.innerHTML = html;
     } else {
         console.error('최상위 컨테이너가 없어 UI를 진행하지 못합니다.');
     }

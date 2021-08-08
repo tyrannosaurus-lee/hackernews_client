@@ -160,7 +160,7 @@ function updateView(html) {
   // if (container != null) 의 축약형
   // if (container != null) {
   if (container) {
-    container.innerHTML = template;
+    container.innerHTML = html;
   } else {
     console.error('최상위 컨테이너가 없어 UI를 진행하지 못합니다.');
   }
@@ -270,7 +270,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "60482" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "52745" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
