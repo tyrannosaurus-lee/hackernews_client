@@ -122,31 +122,26 @@ parcelRequire = (function (modules, cache, entry, globalName) {
 
 var container = document.getElementById('root');
 var ajax = new XMLHttpRequest();
-var content = document.createElement('div');
-var NEWS_URL = 'http://api.hnpwa.com/v0/news/1.json';
-var CONTENT_URL = 'http://api.hnpwa.com/v0/item/@id.json';
+var NEWS_URL = 'https://api.hnpwa.com/v0/news/1.json';
+var CONTENT_URL = 'https://api.hnpwa.com/v0/item/@id.json';
 var store = {
   currentPage: 1,
   feeds: []
-}; // 호출할 때 기술된 타입이 그대로 T로 넘어옴
-// 리턴값을 AjaxResponse로 쓴다는 뜻
-// 제네릭 : 호출하는 쪽에서 유형을 명시해 주면 그 유형을 받아서 그대로 getData에서 반환 유형으로 사용하겠다
+};
 
 function getData(url) {
   ajax.open('GET', url, false);
-  ajax.send(); // 결국 JSON.parse(ajax.response)한 것을 반환하는 유형이 바로 이 T 유형, 리턴 유형이라는 뜻
-
+  ajax.send();
   return JSON.parse(ajax.response);
 }
 
 function makeFeeds(feeds) {
   for (var i = 0; i < feeds.length; i++) {
-    feeds[i].red = false;
+    feeds[i].read = false;
   }
 
   return feeds;
-} // 리턴 값이 없을 때 : void
-
+}
 
 function updateView(html) {
   if (container) {
@@ -154,37 +149,31 @@ function updateView(html) {
   } else {
     console.error('최상위 컨테이너가 없어 UI를 진행하지 못합니다.');
   }
-} // 글 목록
-
+}
 
 function newsFeed() {
   var newsFeed = store.feeds;
   var newsList = [];
-  var template = "\n        <div class=\"bg-gray-600 min-h-screen\">\n            <div class=\"bg-white text-xl\">\n                <div class=\"mx-auto px-4\">\n                    <div class=\"flex justify-between items-center py-6\">\n                        <div class=\"flex justify-start\">\n                            <h1 class=\"font-extrabold\">Hacker News</h1>\n                        </div>\n                        <div class=\"items-center justify-end\">\n                            <a href=\"#/page/{{__prev_page__}}\" class=\"text-gray-500\">\n                                Previous\n                            </a>\n                            <a href=\"#/page/{{__next_page__}}\" class=\"text-gray-500 ml-4\">\n                                Next\n                            </a>\n                        </div>\n                    </div>\n                </div>\n            </div>\n            <div class=\"p-4 text-2xl text-gray-700\">\n                {{__news_feed__}}\n            </div>\n        </div>\n    ";
+  var template = "\n      <div class=\"bg-gray-600 min-h-screen\">\n        <div class=\"bg-white text-xl\">\n          <div class=\"mx-auto px-4\">\n            <div class=\"flex justify-between items-center py-6\">\n              <div class=\"flex justify-start\">\n                <h1 class=\"font-extrabold\">Hacker News</h1>\n              </div>\n              <div class=\"items-center justify-end\">\n                <a href=\"#/page/{{__prev_page__}}\" class=\"text-gray-500\">\n                  Previous\n                </a>\n                <a href=\"#/page/{{__next_page__}}\" class=\"text-gray-500 ml-4\">\n                  Next\n                </a>\n              </div>\n            </div>\n          </div>\n        </div>\n        <div class=\"p-4 text-2xl text-gray-700\">\n          {{__news_feed__}}\n        </div>\n      </div>\n    ";
 
   if (newsFeed.length === 0) {
-    // 응답으로 받을 원하는 타입은 NewsFeed의 배열타입
     newsFeed = store.feeds = makeFeeds(getData(NEWS_URL));
   }
 
   for (var i = (store.currentPage - 1) * 10; i < store.currentPage * 10; i++) {
-    newsList.push("\n        <div class=\"p-6 " + (newsFeed[i].read ? 'bg-red-500' : 'bg-white') + " mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100\">\n            <div class=\"flex\">\n                <div class=\"flex-auto\">\n                    <a href=\"#/show/" + newsFeed[i].id + "\">" + newsFeed[i].title + "</a>\n                </div>\n                <div class=\"text-center text-sm\">\n                    <div class=\"w-10 text-white bg-green-300 rounded-lg px-0 py-2\">" + newsFeed[i].comments_count + "</div>\n                </div>\n            </div>\n            <div class=\"flex mt-3\">\n                <div class=\"grid grid-cols-3 text-sm text-gray-500\">\n                    <div><i class=\"fas fa-user mr-1\"></i>" + newsFeed[i].user + "</div>\n                    <div><i class=\"fas fa-heart mr-1\"></i>" + newsFeed[i].points + "</div>\n                    <div><i class=\"far fa-clock mr-1\"></i>" + newsFeed[i].time_ago + "</div>\n                </div>\n            </div>\n        </div>\n        ");
+    newsList.push("\n        <div class=\"p-6 " + (newsFeed[i].read ? 'bg-red-500' : 'bg-white') + " mt-6 rounded-lg shadow-md transition-colors duration-500 hover:bg-green-100\">\n          <div class=\"flex\">\n            <div class=\"flex-auto\">\n              <a href=\"#/show/" + newsFeed[i].id + "\">" + newsFeed[i].title + "</a>\n            </div>\n            <div class=\"text-center text-sm\">\n              <div class=\"w-10 text-white bg-green-300 rounded-lg px-0 py-2\">" + newsFeed[i].comments_count + "</div>\n            </div>\n          </div>\n          <div class=\"flex mt-3\">\n            <div class=\"grid grid-cols-3 text-sm text-gray-500\">\n              <div><i class=\"fas fa-user mr-1\"></i>" + newsFeed[i].user + "</div>\n              <div><i class=\"fas fa-heart mr-1\"></i>" + newsFeed[i].points + "</div>\n              <div><i class=\"far fa-clock mr-1\"></i>" + newsFeed[i].time_ago + "</div>\n            </div>\n          </div>\n        </div>\n      ");
   }
 
   template = template.replace('{{__news_feed__}}', newsList.join(''));
   template = template.replace('{{__prev_page__}}', String(store.currentPage > 1 ? store.currentPage - 1 : 1));
   template = template.replace('{{__next_page__}}', String(store.currentPage + 1));
   updateView(template);
-} // 글 내용
-
+}
 
 function newsDetail() {
-  var id = location.hash.substr(7); // 제네릭 : <NewsDetail>로 NewsDetail을 타입으로 주면 응답 값으로 넘어옴. API는 해당하는 API를 이용해서 관련 스펙이 넘어옴.
-  // 제네릭 : 보통 T, 약어로 쓰기도 하고 명시적으로 어떤 유형으로 좀 길게 표현하기도 함.
-
+  var id = location.hash.substr(7);
   var newsContent = getData(CONTENT_URL.replace('@id', id));
-  var title = document.createElement('h1');
-  var template = "\n        <div class=\"bg-gray-600 min-h-screen pb-8\">\n            <div class=\"bg-white text-xl\">\n                <div class=\"mx-auto px-4\">\n                <div class=\"flex justify-between items-center py-6\">\n                    <div class=\"flex justify-start\">\n                    <h1 class=\"font-extrabold\">Hacker News</h1>\n                    </div>\n                    <div class=\"items-center justify-end\">\n                    <a href=\"#/page/" + store.currentPage + "\" class=\"text-gray-500\">\n                        <i class=\"fa fa-times\"></i>\n                    </a>\n                    </div>\n                </div>\n                </div>\n            </div>\n\n            <div class=\"h-full border rounded-xl bg-white m-6 p-4 \">\n                <h2>" + newsContent.title + "</h2>\n                <div class=\"text-gray-400 h-20\">\n                    " + newsContent.content + "\n                </div>\n\n                {{__comments__}}\n\n            </div>\n        </div>\n    ";
+  var template = "\n      <div class=\"bg-gray-600 min-h-screen pb-8\">\n        <div class=\"bg-white text-xl\">\n          <div class=\"mx-auto px-4\">\n            <div class=\"flex justify-between items-center py-6\">\n              <div class=\"flex justify-start\">\n                <h1 class=\"font-extrabold\">Hacker News</h1>\n              </div>\n              <div class=\"items-center justify-end\">\n                <a href=\"#/page/" + store.currentPage + "\" class=\"text-gray-500\">\n                  <i class=\"fa fa-times\"></i>\n                </a>\n              </div>\n            </div>\n          </div>\n        </div>\n\n        <div class=\"h-full border rounded-xl bg-white m-6 p-4 \">\n          <h2>" + newsContent.title + "</h2>\n          <div class=\"text-gray-400 h-20\">\n            " + newsContent.content + "\n          </div>\n\n          {{__comments__}}\n\n        </div>\n      </div>\n    ";
 
   for (var i = 0; i < store.feeds.length; i++) {
     if (store.feeds[i].id === Number(id)) {
@@ -194,28 +183,22 @@ function newsDetail() {
   }
 
   updateView(template.replace('{{__comments__}}', makeComment(newsContent.comments)));
-} // 인자 called는 안쓰기로 해요~
-// called 값을 사용할 comments 안에 level
-
+}
 
 function makeComment(comments) {
-  var commentString = []; // comments[i] 중복 제거 : comments[i]가 많을수록 comments[i]가 계속 반복됨.
-  // comments[i]를 변수 하나 만들어서 거기에 넣고 그 변수를 사용하기
+  var commentString = [];
 
   for (var i = 0; i < comments.length; i++) {
     var comment = comments[i];
-    commentString.push("\n            <div style=\"padding-left: " + comment.level * 40 + "px;\" class=\"mt-4\">\n                <div class=\"text-gray-400\">\n                    <i class=\"fa fa-sort-up mr-2\"></i>\n                    <strong>" + comment.user + "</strong> " + comment.time_ago + "\n                </div>\n                <p class=\"text-gray-700\">" + comment.content + "</p>\n            </div>\n        "); // 끝을 알 수 없는 구조인 경우에 자주 사용되는 테크닉!!!
-    // 재귀호출 : 함수가 자기 자신을 호출하는 것
+    commentString.push("\n        <div style=\"padding-left: " + comment.level * 40 + "px;\" class=\"mt-4\">\n          <div class=\"text-gray-400\">\n            <i class=\"fa fa-sort-up mr-2\"></i>\n            <strong>" + comment.user + "</strong> " + comment.time_ago + "\n          </div>\n          <p class=\"text-gray-700\">" + comment.content + "</p>\n        </div>\n      ");
 
     if (comment.comments.length > 0) {
       commentString.push(makeComment(comment.comments));
-    } // 없을때까지 반복
-
+    }
   }
 
   return commentString.join('');
-} // 라우터
-
+}
 
 function router() {
   var routePath = location.hash;
@@ -260,7 +243,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50811" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "64884" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
