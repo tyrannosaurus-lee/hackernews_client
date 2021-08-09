@@ -1,13 +1,5 @@
-// 타입 알리아스 vs 인터페이스
-// 타입 알리아스 :
-// 객체 형태의 데이터의 유형 형식을 정의한다.
-// 타입이나 인터페이스와 같은 타이핑하는 식별자들은 대문자로 시작하는 표기법을 많이 씀.
 type Store = {
-    currentPage : number; // 객체와 달리 세미콜론;으로 끝내는게 특징
-    // newsFeed가 들어갈 객체 데이터 타입. 이렇게 빈 배열로 타입을 해 놓으면 배열 안에 어떤 게 들어갈지 제약을 하지 못함.
-    // 어떤 유형의 데이터가 다 들어갈 수도 있지만 명확하게 어떤 타입의 데이터가 이 배열 안에 들어갈지 기술해주는게 좋음(타입 명시하기)
-    // feeds: [];
-    // NewsFeed[] : NewsFeed 유형의 데이터가 들어가는 배열이라는 뜻!
+    currentPage : number;
     feeds: NewsFeed[];
 }
 
@@ -19,56 +11,53 @@ type NewsFeed = {
     user: string;
     time_ago: string;
     poinsts: number;
-    // read :
-    // 다른 속성과 달리 처음에 네트워크를 통해서 가져왔을 땐 없음.
-    // 처음에는 데이터가 없다가 나중에는 있다가. 선택적인 데이터임. 그래서 선택 속성이라고 하는 마킹을 해줄 수 있다.
-    // 콜론;과 속성 명 사이에 물음표를 붙여주면 됨.
     read?: boolean;
 }
 
-// 프리미티브 타입 vs 객체 타입
-// 프리미티브 타입 :
-// 문자열, 숫자, boolean, nul, undefined
+type NewsDetail = {
+    id: number;
+    time_ago: string;
+    title: string;
+    url: string;
+    user: string;
+    content: string;
+    comments: [];
+}
 
-// 타입 확인 : 마우스 커서를 올려놓으면 관련된 정보를 표시해 줌.
-// ex) : string):
-// 함수의 인자 괄호 뒤에 콜론은 이 함수의 반환값 타입. |은 또는(유니온 타입). 둘 중 하나가 반환될 수 있다는 뜻.
+type NewsCommnet = {
+
+}
+
 const container: HTMLElement | null = document.getElementById('root');
 const ajax: XMLHttpRequest = new XMLHttpRequest();
 const content = document.createElement('div');
 const NEWS_URL = 'http://api.hnpwa.com/v0/news/1.json';
 const CONTENT_URL = 'http://api.hnpwa.com/v0/item/@id.json'
 
-// store 타입은 store에 씀
 const store: Store = {
     currentPage: 1,
     feeds: [],
 }
 
-function getData(url) {
+// 호출할 때 기술된 타입이 그대로 T로 넘어옴
+// 리턴값을 AjaxResponse로 쓴다는 뜻
+// 제네릭 : 호출하는 쪽에서 유형을 명시해 주면 그 유형을 받아서 그대로 getData에서 반환 유형으로 사용하겠다
+function getData<AjaxResponse>(url: string): AjaxResponse {
     ajax.open('GET', url, false);
     ajax.send();
-
+    // 결국 JSON.parse(ajax.response)한 것을 반환하는 유형이 바로 이 T 유형, 리턴 유형이라는 뜻
     return JSON.parse(ajax.response);
 }
 
-// 읽었는지 여부 체크
-function makeFeeds(feeds){
+function makeFeeds(feeds: NewsFeed[]): NewsFeed[] {
     for(let i=0; i < feeds.length; i++){
         feeds[i].red = false;
     }
     return feeds;
 }
 
-// view update : ex)container.innerHTML에다가 HTML문자열을 넣는 것.
-
-// 타입가드 : 타입을 방어한다.
-// 어떤 유형의 값이 2가지가 들어온 케이스(그중에 1가지는 null인 즉, 데이터가 없는 케이스)에서 무작정 데이터가 당연히 있다고 생각하과 속성을 접근했을 경우,
-// 이런 류의 코드들에서 null을 체크해라
-function updateView(html) {
-    // 코드 상으로 null이 들어가 있지 않은 경우에만 innerHTML에 접근해라
-    // if (container != null) 의 축약형
-    // if (container != null) {
+// 리턴 값이 없을 때 : void
+function updateView(html: string): void {
     if (container) {
         container.innerHTML = html;
     } else {
@@ -77,9 +66,7 @@ function updateView(html) {
 }
 
 // 글 목록
-function newsFeed(){
-    // getData를 통해서 무조건 호출되면 새로운 목록을 갖고 옴.
-    // const newsFeed = getData(NEWS_URL);
+function newsFeed(): void {
     let newsFeed = store.feeds;
 
     const newsList = [];
@@ -98,7 +85,7 @@ function newsFeed(){
                             <a href="#/page/{{__next_page__}}" class="text-gray-500 ml-4">
                                 Next
                             </a>
-                        /div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -108,10 +95,9 @@ function newsFeed(){
         </div>
     `;
 
-    // 최초의 한 번은 getData해서 가져와야 함
     if (newsFeed.length === 0) {
-        // = 을 연속해서 쓸 수 있음
-        newsFeed = store.feeds = makeFeeds(getData(NEWS_URL));
+        // 응답으로 받을 원하는 타입은 NewsFeed의 배열타입
+        newsFeed = store.feeds = makeFeeds(getData<NewsFeed[]>(NEWS_URL));
     }
 
     for(let i=(store.currentPage - 1) * 10; i<store.currentPage * 10; i++){
@@ -137,17 +123,19 @@ function newsFeed(){
     }
 
     template = template.replace('{{__news_feed__}}', newsList.join(''));
-    template = template.replace('{{__prev_page__}}', store.currentPage > 1 ? store.currentPage - 1 : 1);
-    template = template.replace('{{__next_page__}}', store.currentPage + 1);
+    template = template.replace('{{__prev_page__}}', String(store.currentPage > 1 ? store.currentPage - 1 : 1));
+    template = template.replace('{{__next_page__}}', String(store.currentPage + 1));
 
     updateView(template);
 }
 
 
 // 글 내용
-function newsDetail(){
+function newsDetail(): void {
     const id = location.hash.substr(7);
-    const newsContent = getData(CONTENT_URL.replace('@id', id));
+    // 제네릭 : <NewsDetail>로 NewsDetail을 타입으로 주면 응답 값으로 넘어옴. API는 해당하는 API를 이용해서 관련 스펙이 넘어옴.
+    // 제네릭 : 보통 T, 약어로 쓰기도 하고 명시적으로 어떤 유형으로 좀 길게 표현하기도 함.
+    const newsContent = getData<NewsDetail>(CONTENT_URL.replace('@id', id));
     const title = document.createElement('h1');
     let template = `
         <div class="bg-gray-600 min-h-screen pb-8">
@@ -185,35 +173,40 @@ function newsDetail(){
         }
     }
 
-    function makeComment(comments, called = 0){
-        const commentString = [];
-
-        for(let i=0; i < comments.length; i++) {
-            commentString.push(`
-                <div style="padding-left: ${called * 40}px;" class="mt-4">
-                    <div class="text-gray-400">
-                        <i class="fa fa-sort-up mr-2"></i>
-                        <strong>${comments[i].user}</strong> ${comments[i].time_ago}
-                    </div>
-                    <p class="text-gray-700">${comments[i].content}</p>
-                </div>
-            `);
-
-            // 끝을 알 수 없는 구조인 경우에 자주 사용되는 테크닉!!!
-            // 재귀호출 : 함수가 자기 자신을 호출하는 것
-            if(comments[i].comments.length > 0) {
-                commentString.push(makeComment(comments[i].comments, called + 1));
-            }
-            // 없을때까지 반복
-        }
-        return commentString.join('');
-    }
-
     updateView(template.replace('{{__comments__}}', makeComment(newsContent.comments)));
 }
 
+// 인자 called는 안쓰기로 해요~
+// called 값을 사용할 comments 안에 level
+function makeComment(comments: NewsComment[]): string{
+    const commentString = [];
+
+    // comments[i] 중복 제거 : comments[i]가 많을수록 comments[i]가 계속 반복됨.
+    // comments[i]를 변수 하나 만들어서 거기에 넣고 그 변수를 사용하기
+    for(let i=0; i < comments.length; i++) {
+        const comment: NewsCommetn = comments[i];
+        commentString.push(`
+            <div style="padding-left: ${comment.level * 40}px;" class="mt-4">
+                <div class="text-gray-400">
+                    <i class="fa fa-sort-up mr-2"></i>
+                    <strong>${comment.user}</strong> ${comment.time_ago}
+                </div>
+                <p class="text-gray-700">${comment.content}</p>
+            </div>
+        `);
+
+        // 끝을 알 수 없는 구조인 경우에 자주 사용되는 테크닉!!!
+        // 재귀호출 : 함수가 자기 자신을 호출하는 것
+        if(comment.comments.length > 0) {
+            commentString.push(makeComment(comment.comments));
+        }
+        // 없을때까지 반복
+    }
+    return commentString.join('');
+}
+
 // 라우터
-function router(){
+function router(): void {
     const routePath = location.hash;
 
     if(routePath === ''){
