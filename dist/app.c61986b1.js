@@ -127,13 +127,14 @@ var CONTENT_URL = 'https://api.hnpwa.com/v0/item/@id.json';
 var store = {
   currentPage: 1,
   feeds: []
-};
+}; // 네트워크를 통해 API를 호출하는 코드
 
 function getData(url) {
   ajax.open('GET', url, false);
   ajax.send();
   return JSON.parse(ajax.response);
-}
+} // 뷰와 관련된 업데이트를 처리하는 코드
+
 
 function makeFeeds(feeds) {
   for (var i = 0; i < feeds.length; i++) {
@@ -141,7 +142,8 @@ function makeFeeds(feeds) {
   }
 
   return feeds;
-}
+} // 뷰와 관련된 업데이트를 처리하는 코드
+
 
 function updateView(html) {
   if (container) {
@@ -149,7 +151,8 @@ function updateView(html) {
   } else {
     console.error('최상위 컨테이너가 없어 UI를 진행하지 못합니다.');
   }
-}
+} // 메인 뷰 처리하는 로직
+
 
 function newsFeed() {
   var newsFeed = store.feeds;
@@ -168,7 +171,8 @@ function newsFeed() {
   template = template.replace('{{__prev_page__}}', String(store.currentPage > 1 ? store.currentPage - 1 : 1));
   template = template.replace('{{__next_page__}}', String(store.currentPage + 1));
   updateView(template);
-}
+} // 메인 뷰 처리하는 로직
+
 
 function newsDetail() {
   var id = location.hash.substr(7);
@@ -183,7 +187,8 @@ function newsDetail() {
   }
 
   updateView(template.replace('{{__comments__}}', makeComment(newsContent.comments)));
-}
+} // 내용 뷰에서 코멘트를 나타내는 처리
+
 
 function makeComment(comments) {
   var commentString = [];
@@ -198,7 +203,8 @@ function makeComment(comments) {
   }
 
   return commentString.join('');
-}
+} // 라우터 처리
+
 
 function router() {
   var routePath = location.hash;
@@ -243,7 +249,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63299" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63426" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

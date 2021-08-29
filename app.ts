@@ -1,11 +1,3 @@
-// 타입알리아스 -> 인터페이스
-// type -> interface
-// 이퀄을 사용하지 않음
-// 타입 2개를 합치거나 유니온 타입을 만들거나 인터섹션 타입을 만들거나 하는 것을 지원하지 않음
-// 확장 : & 대신에 extends
-// 교차 타입과 같은 유형은 extends로 지원을 하는데 엄밀히 말하면 교차 타입과 extends는 또 다른 측면이 있음.
-// 사용하는 측면에 있어서 굉장히 유사한 부분이 있음.
-// 유니온 타입(이거 또는 이거)은 사실 인터페이스로는 지원이 안됨
   interface Store {
     currentPage: number;
     feeds: NewsFeed[];
@@ -46,6 +38,7 @@
     feeds: [],
   };
 
+  // 네트워크를 통해 API를 호출하는 코드
   function getData<AjaxResponse>(url: string): AjaxResponse {
     ajax.open('GET', url, false);
     ajax.send();
@@ -53,6 +46,7 @@
     return JSON.parse(ajax.response);
   }
 
+  // 뷰와 관련된 업데이트를 처리하는 코드
   function makeFeeds(feeds: NewsFeed[]): NewsFeed[] {
     for (let i = 0; i < feeds.length; i++) {
       feeds[i].read = false;
@@ -61,6 +55,7 @@
     return feeds;
   }
 
+  // 뷰와 관련된 업데이트를 처리하는 코드
   function updateView(html: string): void {
     if (container) {
       container.innerHTML = html;
@@ -69,6 +64,7 @@
     }
   }
 
+  // 메인 뷰 처리하는 로직
   function newsFeed(): void {
     let newsFeed: NewsFeed[] = store.feeds;
     const newsList = [];
@@ -130,6 +126,7 @@
     updateView(template);
   }
 
+  // 메인 뷰 처리하는 로직
   function newsDetail(): void {
     const id = location.hash.substr(7);
     const newsContent = getData<NewsDetail>(CONTENT_URL.replace('@id', id))
@@ -172,6 +169,7 @@
     updateView(template.replace('{{__comments__}}', makeComment(newsContent.comments)));
   }
 
+  // 내용 뷰에서 코멘트를 나타내는 처리
   function makeComment(comments: NewsComment[]): string {
     const commentString = [];
 
@@ -196,6 +194,7 @@
     return commentString.join('');
   }
 
+  // 라우터 처리
   function router(): void {
     const routePath = location.hash;
 

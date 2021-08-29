@@ -11,3 +11,11 @@ npm install -g typescript
 parcel.js 설치 : npm install -g parcel-bundler
 package.json생성 : npm init -y
 parcel.js 시작 : parcel index.html
+
+
+파일
+src : 소스 코드 배치
+src > core : 공통 코드 (api.ts, router.ts, view.ts)
+src > page : ui관련 (news-detail-view.ts, news-feed-view.ts)
+src > types : 인터페이스 저장
+src > config.ts: url을 담고 있는 설정 데이터
