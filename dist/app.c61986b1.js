@@ -120,6 +120,34 @@ parcelRequire = (function (modules, cache, entry, globalName) {
 })({"app.ts":[function(require,module,exports) {
 "use strict";
 
+var __extends = this && this.__extends || function () {
+  var _extendStatics = function extendStatics(d, b) {
+    _extendStatics = Object.setPrototypeOf || {
+      __proto__: []
+    } instanceof Array && function (d, b) {
+      d.__proto__ = b;
+    } || function (d, b) {
+      for (var p in b) {
+        if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
+      }
+    };
+
+    return _extendStatics(d, b);
+  };
+
+  return function (d, b) {
+    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+
+    _extendStatics(d, b);
+
+    function __() {
+      this.constructor = d;
+    }
+
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  };
+}();
+
 var container = document.getElementById('root');
 var ajax = new XMLHttpRequest();
 var NEWS_URL = 'https://api.hnpwa.com/v0/news/1.json';
@@ -127,13 +155,60 @@ var CONTENT_URL = 'https://api.hnpwa.com/v0/item/@id.json';
 var store = {
   currentPage: 1,
   feeds: []
-}; // 네트워크를 통해 API를 호출하는 코드
+}; // class는 최초의 초기화되는 과정이 필요함.
+// 그 초기화 과정을 처리하는 함수가 바로 생성자
 
-function getData(url) {
-  ajax.open('GET', url, false);
-  ajax.send();
-  return JSON.parse(ajax.response);
-} // 뷰와 관련된 업데이트를 처리하는 코드
+var Api =
+/** @class */
+function () {
+  // 먼저 url을 외부로부터 받음.
+  function Api(url) {
+    // class에 내부 요소로 접근하는(인스턴스 객체에 접근하는) 지시어 : this
+    this.url = url;
+    this.ajax = new XMLHttpRequest();
+  } // protected : class의 속성과 메소드 등을 외부로 노출시키지 않는 지시어
+
+
+  Api.prototype.getRequest = function () {
+    this.ajax.open('GET', this.url, false);
+    this.ajax.send();
+    return JSON.parse(this.ajax.response);
+  };
+
+  return Api;
+}();
+
+var NewsFeedApi =
+/** @class */
+function (_super) {
+  __extends(NewsFeedApi, _super);
+
+  function NewsFeedApi() {
+    return _super !== null && _super.apply(this, arguments) || this;
+  }
+
+  NewsFeedApi.prototype.getData = function () {
+    return this.getRequest();
+  };
+
+  return NewsFeedApi;
+}(Api);
+
+var NewsDetailApi =
+/** @class */
+function (_super) {
+  __extends(NewsDetailApi, _super);
+
+  function NewsDetailApi() {
+    return _super !== null && _super.apply(this, arguments) || this;
+  }
+
+  NewsDetailApi.prototype.getData = function () {
+    return this.getRequest();
+  };
+
+  return NewsDetailApi;
+}(Api); // 뷰와 관련된 업데이트를 처리하는 코드
 
 
 function makeFeeds(feeds) {
@@ -155,12 +230,13 @@ function updateView(html) {
 
 
 function newsFeed() {
+  var api = new NewsFeedApi(NEWS_URL);
   var newsFeed = store.feeds;
   var newsList = [];
   var template = "\n      <div class=\"bg-gray-600 min-h-screen\">\n        <div class=\"bg-white text-xl\">\n          <div class=\"mx-auto px-4\">\n            <div class=\"flex justify-between items-center py-6\">\n              <div class=\"flex justify-start\">\n                <h1 class=\"font-extrabold\">Hacker News</h1>\n              </div>\n              <div class=\"items-center justify-end\">\n                <a href=\"#/page/{{__prev_page__}}\" class=\"text-gray-500\">\n                  Previous\n                </a>\n                <a href=\"#/page/{{__next_page__}}\" class=\"text-gray-500 ml-4\">\n                  Next\n                </a>\n              </div>\n            </div>\n          </div>\n        </div>\n        <div class=\"p-4 text-2xl text-gray-700\">\n          {{__news_feed__}}\n        </div>\n      </div>\n    ";
 
   if (newsFeed.length === 0) {
-    newsFeed = store.feeds = makeFeeds(getData(NEWS_URL));
+    newsFeed = store.feeds = makeFeeds(api.getData());
   }
 
   for (var i = (store.currentPage - 1) * 10; i < store.currentPage * 10; i++) {
@@ -176,7 +252,8 @@ function newsFeed() {
 
 function newsDetail() {
   var id = location.hash.substr(7);
-  var newsContent = getData(CONTENT_URL.replace('@id', id));
+  var api = new NewsDetailApi(CONTENT_URL.replace('@id', id));
+  var newsContent = api.getData();
   var template = "\n      <div class=\"bg-gray-600 min-h-screen pb-8\">\n        <div class=\"bg-white text-xl\">\n          <div class=\"mx-auto px-4\">\n            <div class=\"flex justify-between items-center py-6\">\n              <div class=\"flex justify-start\">\n                <h1 class=\"font-extrabold\">Hacker News</h1>\n              </div>\n              <div class=\"items-center justify-end\">\n                <a href=\"#/page/" + store.currentPage + "\" class=\"text-gray-500\">\n                  <i class=\"fa fa-times\"></i>\n                </a>\n              </div>\n            </div>\n          </div>\n        </div>\n\n        <div class=\"h-full border rounded-xl bg-white m-6 p-4 \">\n          <h2>" + newsContent.title + "</h2>\n          <div class=\"text-gray-400 h-20\">\n            " + newsContent.content + "\n          </div>\n\n          {{__comments__}}\n\n        </div>\n      </div>\n    ";
 
   for (var i = 0; i < store.feeds.length; i++) {
@@ -249,7 +326,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63426" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59500" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

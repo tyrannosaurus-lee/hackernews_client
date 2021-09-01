@@ -38,12 +38,38 @@
     feeds: [],
   };
 
-  // 네트워크를 통해 API를 호출하는 코드
-  function getData<AjaxResponse>(url: string): AjaxResponse {
-    ajax.open('GET', url, false);
-    ajax.send();
+  // class는 최초의 초기화되는 과정이 필요함.
+  // 그 초기화 과정을 처리하는 함수가 바로 생성자
+  class Api {
+    // url을 내부에 저장
+    url: string;
+    ajax: XMLHttpRequest;
+    // 먼저 url을 외부로부터 받음.
+    constructor(url: string) {
+      // class에 내부 요소로 접근하는(인스턴스 객체에 접근하는) 지시어 : this
+      this.url = url;
+      this.ajax = new XMLHttpRequest();
+    }
 
-    return JSON.parse(ajax.response);
+    // protected : class의 속성과 메소드 등을 외부로 노출시키지 않는 지시어
+    protected getRequest<AjaxResponse>(): AjaxResponse{
+      this.ajax.open('GET', this.url, false);
+      this.ajax.send();
+
+      return JSON.parse(this.ajax.response);
+    }
+  }
+
+  class NewsFeedApi extends Api {
+    getData() : NewsFeed[] {
+      return this.getRequest<NewsFeed[]>();
+    }
+  }
+
+  class NewsDetailApi extends Api {
+    getData() : NewsDetail[] {
+      return this.getRequest<NewsDetail[]>();
+    }
   }
 
   // 뷰와 관련된 업데이트를 처리하는 코드
@@ -66,6 +92,7 @@
 
   // 메인 뷰 처리하는 로직
   function newsFeed(): void {
+    const api = new NewsFeedApi(NEWS_URL);
     let newsFeed: NewsFeed[] = store.feeds;
     const newsList = [];
     let template = `
@@ -94,7 +121,7 @@
     `;
 
     if (newsFeed.length === 0) {
-      newsFeed = store.feeds = makeFeeds(getData<NewsFeed[]>(NEWS_URL));
+      newsFeed = store.feeds = makeFeeds(api.getData());
     }
 
     for(let i = (store.currentPage - 1) * 10; i < store.currentPage * 10; i++) {
@@ -129,7 +156,8 @@
   // 메인 뷰 처리하는 로직
   function newsDetail(): void {
     const id = location.hash.substr(7);
-    const newsContent = getData<NewsDetail>(CONTENT_URL.replace('@id', id))
+    const api = new NewsDetailApi(CONTENT_URL.replace('@id', id));
+    const newsContent = api.getData();
     let template = `
       <div class="bg-gray-600 min-h-screen pb-8">
         <div class="bg-white text-xl">
