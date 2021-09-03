@@ -19,5 +19,6 @@
   "homepage": "https://github.com/tyrannosaurus-lee/hackernews_client#readme",
   "devDependencies": {
     "typescript": "^4.3.5"
-  }
+  },
+  "dependencies": {}
 }

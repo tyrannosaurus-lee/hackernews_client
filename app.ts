@@ -1,10 +1,12 @@
+  // 믹스인
+  // class 자체를 훨씬 더 독립적인 주체로 바라봄
+  // 그래서 class 간의 상하 관계가 묘사되지 않음
   interface Store {
     currentPage: number;
     feeds: NewsFeed[];
   }
 
   interface News {
-    // readonly : id 값을 다른 값으로 대체하지 못하게 하는 방법
     readonly id: number;
     readonly time_ago: string;
     readonly title: string;
@@ -38,39 +40,72 @@
     feeds: [],
   };
 
-  // class는 최초의 초기화되는 과정이 필요함.
-  // 그 초기화 과정을 처리하는 함수가 바로 생성자
+  function applyApiMixins(targetClass: any, baseClasses: any[]): void {
+    // 기능을 확장할 대상 class를 먼저 적어준다 - NewsFeedApi
+
+    // 믹스인 관련 코드
+    baseClasses.forEach(baseClasses => {
+      Object.getOwnPropertyNames(baseClasses.prototype).forEach(name => {
+        const descriptor = Object.getOwnPropertyDescriptor(baseClasses.prototype, name);
+
+        if (descriptor) {
+          Object.defineProperty(targetClass.prototype, name, descriptor);
+        }
+      });
+    });
+  }
+
   class Api {
-    // url을 내부에 저장
-    url: string;
-    ajax: XMLHttpRequest;
-    // 먼저 url을 외부로부터 받음.
-    constructor(url: string) {
-      // class에 내부 요소로 접근하는(인스턴스 객체에 접근하는) 지시어 : this
-      this.url = url;
-      this.ajax = new XMLHttpRequest();
-    }
+    // url: string;
+    // ajax: XMLHttpRequest;
+    // constructor(url: string) {
+    //   this.url = url;
+    //   this.ajax = new XMLHttpRequest();
+    // }
 
-    // protected : class의 속성과 메소드 등을 외부로 노출시키지 않는 지시어
-    protected getRequest<AjaxResponse>(): AjaxResponse{
-      this.ajax.open('GET', this.url, false);
-      this.ajax.send();
+    // 생성자가 없어졌으니 Request를 받을 때 직접url을 받아줘야 함 (this 삭제)
+    // protected getRequest<AjaxResponse>(): AjaxResponse{
+    getRequest<AjaxResponse>(url: string): AjaxResponse{
+      // this의 ajax가 없으니 내부 변수로 만든다
+      const ajax = new XMLHttpRequest();
+      // this.ajax.open('GET', this.url, false);
+      ajax.open('GET', url, false);
+      // this.ajax.send();
+      ajax.send();
 
-      return JSON.parse(this.ajax.response);
+      return JSON.parse(ajax.response);
     }
   }
 
-  class NewsFeedApi extends Api {
+  class NewsFeedApi {
     getData() : NewsFeed[] {
-      return this.getRequest<NewsFeed[]>();
+      // getRequest의 명세가 바뀌었음
+      // 입력 값으로 url을 받게 되어 있음. 그런데 url은 최종적으로 호출하는 쪽에서 줘야 함.
+      // 그래서 getData 안에서 직접 NEWS_URL을 넘겨 줌.
+      // return this.getRequest<NewsFeed[]>();
+      return this.getRequest<NewsFeed[]>(NEWS_URL);
     }
   }
 
-  class NewsDetailApi extends Api {
-    getData() : NewsDetail[] {
-      return this.getRequest<NewsDetail[]>();
+  class NewsDetailApi {
+    // CONTENT_URL은 혼자만 존재하는 url이 아니므로 id값만 받으면 됨.
+    getData(id: string) : NewsDetail {
+      return this.getRequest<NewsDetail>(CONTENT_URL.replace('@id', id));
     }
   }
+
+  interface NewsFeedApi extends Api {};
+  interface NewsDetailApi extends Api {};
+
+  // 의사코드 : 전체적으로 흐름만을 알기 위해서 문법에 상관없이 기재해 놓은 코드
+  // 첫 번째 인자(NewsFeedApi, NewsDetailApi)로 받은 class한테 두 번째 인자(Api)로 받은 class의 내용을 applyApiMixins에 상속시켜 줌
+  // 이건 마치 유사 extends -> 두번째 인자로 받는 class의 내용들을 첫 번째 인자로 옮겨 주는 역할. 굳이 왜 이 방법을?
+  // 1. 기존 extends : 코드에 적시되어야 하는 상속 방법
+  //    (상속의 관계를 바꾸고 싶으면 코드 자체를 바꿔야 된다는 뜻. 관계를 유연하게 가져갈 수 없다.)
+  // 2. extends : 다중 상속을 지원하지 않음.
+  //    상위 class를 n개를 받을 수 있는 구조로 만듦 - 배열
+  applyApiMixins(NewsFeedApi, [Api]);
+  applyApiMixins(NewsDetailApi, [Api]);
 
   // 뷰와 관련된 업데이트를 처리하는 코드
   function makeFeeds(feeds: NewsFeed[]): NewsFeed[] {
@@ -92,7 +127,9 @@
 
   // 메인 뷰 처리하는 로직
   function newsFeed(): void {
-    const api = new NewsFeedApi(NEWS_URL);
+    // newsFeed자체가 NEWS_URL을 직접 넘겨 주고 있기 때문에 바깥쪽에서 굳이 인자로 받을 필요가 없다
+    // const api = new NewsFeedApi(NEWS_URL);
+    const api = new NewsFeedApi();
     let newsFeed: NewsFeed[] = store.feeds;
     const newsList = [];
     let template = `
@@ -156,8 +193,8 @@
   // 메인 뷰 처리하는 로직
   function newsDetail(): void {
     const id = location.hash.substr(7);
-    const api = new NewsDetailApi(CONTENT_URL.replace('@id', id));
-    const newsContent = api.getData();
+    const api = new NewsDetailApi();
+    const newsDetail: NewsDetail = api.getData(id);
     let template = `
       <div class="bg-gray-600 min-h-screen pb-8">
         <div class="bg-white text-xl">
@@ -176,9 +213,9 @@
         </div>
 
         <div class="h-full border rounded-xl bg-white m-6 p-4 ">
-          <h2>${newsContent.title}</h2>
+          <h2>${newsDetail.title}</h2>
           <div class="text-gray-400 h-20">
-            ${newsContent.content}
+            ${newsDetail.content}
           </div>
 
           {{__comments__}}

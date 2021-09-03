@@ -120,34 +120,6 @@ parcelRequire = (function (modules, cache, entry, globalName) {
 })({"app.ts":[function(require,module,exports) {
 "use strict";
 
-var __extends = this && this.__extends || function () {
-  var _extendStatics = function extendStatics(d, b) {
-    _extendStatics = Object.setPrototypeOf || {
-      __proto__: []
-    } instanceof Array && function (d, b) {
-      d.__proto__ = b;
-    } || function (d, b) {
-      for (var p in b) {
-        if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p];
-      }
-    };
-
-    return _extendStatics(d, b);
-  };
-
-  return function (d, b) {
-    if (typeof b !== "function" && b !== null) throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-
-    _extendStatics(d, b);
-
-    function __() {
-      this.constructor = d;
-    }
-
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-  };
-}();
-
 var container = document.getElementById('root');
 var ajax = new XMLHttpRequest();
 var NEWS_URL = 'https://api.hnpwa.com/v0/news/1.json';
@@ -155,61 +127,82 @@ var CONTENT_URL = 'https://api.hnpwa.com/v0/item/@id.json';
 var store = {
   currentPage: 1,
   feeds: []
-}; // class는 최초의 초기화되는 과정이 필요함.
-// 그 초기화 과정을 처리하는 함수가 바로 생성자
+};
 
-var Api =
-/** @class */
-function () {
-  // 먼저 url을 외부로부터 받음.
-  function Api(url) {
-    // class에 내부 요소로 접근하는(인스턴스 객체에 접근하는) 지시어 : this
-    this.url = url;
-    this.ajax = new XMLHttpRequest();
-  } // protected : class의 속성과 메소드 등을 외부로 노출시키지 않는 지시어
+function applyApiMixins(targetClass, baseClasses) {
+  // 기능을 확장할 대상 class를 먼저 적어준다 - NewsFeedApi
+  // 믹스인 관련 코드
+  baseClasses.forEach(function (baseClasses) {
+    Object.getOwnPropertyNames(baseClasses.prototype).forEach(function (name) {
+      var descriptor = Object.getOwnPropertyDescriptor(baseClasses.prototype, name);
+
+      if (descriptor) {
+        Object.defineProperty(targetClass.prototype, name, descriptor);
+      }
+    });
+  });
+}
+
+var Api = function () {
+  function Api() {} // url: string;
+  // ajax: XMLHttpRequest;
+  // constructor(url: string) {
+  //   this.url = url;
+  //   this.ajax = new XMLHttpRequest();
+  // }
+  // 생성자가 없어졌으니 Request를 받을 때 직접url을 받아줘야 함 (this 삭제)
+  // protected getRequest<AjaxResponse>(): AjaxResponse{
 
 
-  Api.prototype.getRequest = function () {
-    this.ajax.open('GET', this.url, false);
-    this.ajax.send();
-    return JSON.parse(this.ajax.response);
+  Api.prototype.getRequest = function (url) {
+    // this의 ajax가 없으니 내부 변수로 만든다
+    var ajax = new XMLHttpRequest(); // this.ajax.open('GET', this.url, false);
+
+    ajax.open('GET', url, false); // this.ajax.send();
+
+    ajax.send();
+    return JSON.parse(ajax.response);
   };
 
   return Api;
 }();
 
-var NewsFeedApi =
-/** @class */
-function (_super) {
-  __extends(NewsFeedApi, _super);
-
-  function NewsFeedApi() {
-    return _super !== null && _super.apply(this, arguments) || this;
-  }
+var NewsFeedApi = function () {
+  function NewsFeedApi() {}
 
   NewsFeedApi.prototype.getData = function () {
-    return this.getRequest();
+    // getRequest의 명세가 바뀌었음
+    // 입력 값으로 url을 받게 되어 있음. 그런데 url은 최종적으로 호출하는 쪽에서 줘야 함.
+    // 그래서 getData 안에서 직접 NEWS_URL을 넘겨 줌.
+    // return this.getRequest<NewsFeed[]>();
+    return this.getRequest(NEWS_URL);
   };
 
   return NewsFeedApi;
-}(Api);
+}();
 
-var NewsDetailApi =
-/** @class */
-function (_super) {
-  __extends(NewsDetailApi, _super);
+var NewsDetailApi = function () {
+  function NewsDetailApi() {} // CONTENT_URL은 혼자만 존재하는 url이 아니므로 id값만 받으면 됨.
 
-  function NewsDetailApi() {
-    return _super !== null && _super.apply(this, arguments) || this;
-  }
 
-  NewsDetailApi.prototype.getData = function () {
-    return this.getRequest();
+  NewsDetailApi.prototype.getData = function (id) {
+    return this.getRequest(CONTENT_URL.replace('@id', id));
   };
 
   return NewsDetailApi;
-}(Api); // 뷰와 관련된 업데이트를 처리하는 코드
+}();
 
+;
+; // 의사코드 : 전체적으로 흐름만을 알기 위해서 문법에 상관없이 기재해 놓은 코드
+// 첫 번째 인자(NewsFeedApi, NewsDetailApi)로 받은 class한테 두 번째 인자(Api)로 받은 class의 내용을 applyApiMixins에 상속시켜 줌
+// 이건 마치 유사 extends -> 두번째 인자로 받는 class의 내용들을 첫 번째 인자로 옮겨 주는 역할. 굳이 왜 이 방법을?
+// 1. 기존 extends : 코드에 적시되어야 하는 상속 방법
+//    (상속의 관계를 바꾸고 싶으면 코드 자체를 바꿔야 된다는 뜻. 관계를 유연하게 가져갈 수 없다.)
+// 2. extends : 다중 상속을 지원하지 않음.
+//    상위 class를 n개를 받을 수 있는 구조로 만듦 - 배열
+
+applyApiMixins(NewsFeedApi, [Api]);
+applyApiMixins(NewsDetailApi, [Api]); // 뷰와 관련된 업데이트를 처리하는 코드
 
 function makeFeeds(feeds) {
   for (var i = 0; i < feeds.length; i++) {
@@ -230,7 +223,9 @@ function updateView(html) {
 
 
 function newsFeed() {
-  var api = new NewsFeedApi(NEWS_URL);
+  // newsFeed자체가 NEWS_URL을 직접 넘겨 주고 있기 때문에 바깥쪽에서 굳이 인자로 받을 필요가 없다
+  // const api = new NewsFeedApi(NEWS_URL);
+  var api = new NewsFeedApi();
   var newsFeed = store.feeds;
   var newsList = [];
   var template = "\n      <div class=\"bg-gray-600 min-h-screen\">\n        <div class=\"bg-white text-xl\">\n          <div class=\"mx-auto px-4\">\n            <div class=\"flex justify-between items-center py-6\">\n              <div class=\"flex justify-start\">\n                <h1 class=\"font-extrabold\">Hacker News</h1>\n              </div>\n              <div class=\"items-center justify-end\">\n                <a href=\"#/page/{{__prev_page__}}\" class=\"text-gray-500\">\n                  Previous\n                </a>\n                <a href=\"#/page/{{__next_page__}}\" class=\"text-gray-500 ml-4\">\n                  Next\n                </a>\n              </div>\n            </div>\n          </div>\n        </div>\n        <div class=\"p-4 text-2xl text-gray-700\">\n          {{__news_feed__}}\n        </div>\n      </div>\n    ";
@@ -252,9 +247,9 @@ function newsFeed() {
 
 function newsDetail() {
   var id = location.hash.substr(7);
-  var api = new NewsDetailApi(CONTENT_URL.replace('@id', id));
-  var newsContent = api.getData();
-  var template = "\n      <div class=\"bg-gray-600 min-h-screen pb-8\">\n        <div class=\"bg-white text-xl\">\n          <div class=\"mx-auto px-4\">\n            <div class=\"flex justify-between items-center py-6\">\n              <div class=\"flex justify-start\">\n                <h1 class=\"font-extrabold\">Hacker News</h1>\n              </div>\n              <div class=\"items-center justify-end\">\n                <a href=\"#/page/" + store.currentPage + "\" class=\"text-gray-500\">\n                  <i class=\"fa fa-times\"></i>\n                </a>\n              </div>\n            </div>\n          </div>\n        </div>\n\n        <div class=\"h-full border rounded-xl bg-white m-6 p-4 \">\n          <h2>" + newsContent.title + "</h2>\n          <div class=\"text-gray-400 h-20\">\n            " + newsContent.content + "\n          </div>\n\n          {{__comments__}}\n\n        </div>\n      </div>\n    ";
+  var api = new NewsDetailApi();
+  var newsDetail = api.getData(id);
+  var template = "\n      <div class=\"bg-gray-600 min-h-screen pb-8\">\n        <div class=\"bg-white text-xl\">\n          <div class=\"mx-auto px-4\">\n            <div class=\"flex justify-between items-center py-6\">\n              <div class=\"flex justify-start\">\n                <h1 class=\"font-extrabold\">Hacker News</h1>\n              </div>\n              <div class=\"items-center justify-end\">\n                <a href=\"#/page/" + store.currentPage + "\" class=\"text-gray-500\">\n                  <i class=\"fa fa-times\"></i>\n                </a>\n              </div>\n            </div>\n          </div>\n        </div>\n\n        <div class=\"h-full border rounded-xl bg-white m-6 p-4 \">\n          <h2>" + newsDetail.title + "</h2>\n          <div class=\"text-gray-400 h-20\">\n            " + newsDetail.content + "\n          </div>\n\n          {{__comments__}}\n\n        </div>\n      </div>\n    ";
 
   for (var i = 0; i < store.feeds.length; i++) {
     if (store.feeds[i].id === Number(id)) {
@@ -326,7 +321,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59500" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54512" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
