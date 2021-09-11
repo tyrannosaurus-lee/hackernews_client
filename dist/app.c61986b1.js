@@ -130,8 +130,6 @@ var store = {
 };
 
 function applyApiMixins(targetClass, baseClasses) {
-  // 기능을 확장할 대상 class를 먼저 적어준다 - NewsFeedApi
-  // 믹스인 관련 코드
   baseClasses.forEach(function (baseClasses) {
     Object.getOwnPropertyNames(baseClasses.prototype).forEach(function (name) {
       var descriptor = Object.getOwnPropertyDescriptor(baseClasses.prototype, name);
@@ -144,22 +142,11 @@ function applyApiMixins(targetClass, baseClasses) {
 }
 
 var Api = function () {
-  function Api() {} // url: string;
-  // ajax: XMLHttpRequest;
-  // constructor(url: string) {
-  //   this.url = url;
-  //   this.ajax = new XMLHttpRequest();
-  // }
-  // 생성자가 없어졌으니 Request를 받을 때 직접url을 받아줘야 함 (this 삭제)
-  // protected getRequest<AjaxResponse>(): AjaxResponse{
-
+  function Api() {}
 
   Api.prototype.getRequest = function (url) {
-    // this의 ajax가 없으니 내부 변수로 만든다
-    var ajax = new XMLHttpRequest(); // this.ajax.open('GET', this.url, false);
-
-    ajax.open('GET', url, false); // this.ajax.send();
-
+    var ajax = new XMLHttpRequest();
+    ajax.open('GET', url, false);
     ajax.send();
     return JSON.parse(ajax.response);
   };
@@ -171,10 +158,6 @@ var NewsFeedApi = function () {
   function NewsFeedApi() {}
 
   NewsFeedApi.prototype.getData = function () {
-    // getRequest의 명세가 바뀌었음
-    // 입력 값으로 url을 받게 되어 있음. 그런데 url은 최종적으로 호출하는 쪽에서 줘야 함.
-    // 그래서 getData 안에서 직접 NEWS_URL을 넘겨 줌.
-    // return this.getRequest<NewsFeed[]>();
     return this.getRequest(NEWS_URL);
   };
 
@@ -193,14 +176,7 @@ var NewsDetailApi = function () {
 }();
 
 ;
-; // 의사코드 : 전체적으로 흐름만을 알기 위해서 문법에 상관없이 기재해 놓은 코드
-// 첫 번째 인자(NewsFeedApi, NewsDetailApi)로 받은 class한테 두 번째 인자(Api)로 받은 class의 내용을 applyApiMixins에 상속시켜 줌
-// 이건 마치 유사 extends -> 두번째 인자로 받는 class의 내용들을 첫 번째 인자로 옮겨 주는 역할. 굳이 왜 이 방법을?
-// 1. 기존 extends : 코드에 적시되어야 하는 상속 방법
-//    (상속의 관계를 바꾸고 싶으면 코드 자체를 바꿔야 된다는 뜻. 관계를 유연하게 가져갈 수 없다.)
-// 2. extends : 다중 상속을 지원하지 않음.
-//    상위 class를 n개를 받을 수 있는 구조로 만듦 - 배열
-
+;
 applyApiMixins(NewsFeedApi, [Api]);
 applyApiMixins(NewsDetailApi, [Api]); // 뷰와 관련된 업데이트를 처리하는 코드
 
@@ -258,7 +234,7 @@ function newsDetail() {
     }
   }
 
-  updateView(template.replace('{{__comments__}}', makeComment(newsContent.comments)));
+  updateView(template.replace('{{__comments__}}', makeComment(newsDetail.comments)));
 } // 내용 뷰에서 코멘트를 나타내는 처리
 
 
@@ -321,7 +297,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54512" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "64289" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
